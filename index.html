@@ -277,22 +277,21 @@
     }
 
     #random-btn {
-      display: none;
+      visibility: hidden;
       background: transparent;
       color: #565758;
       font-size: 1.2rem;
-      border: 1px solid #3a3a3c;
+      border: none;
       border-radius: 4px;
       cursor: pointer;
       padding: 0;
       line-height: 1;
-      transition: color 0.15s, border-color 0.15s;
+      transition: color 0.15s;
       position: relative;
     }
 
     #random-btn:hover {
       color: #fff;
-      border-color: #818384;
     }
 
     #random-btn::after {
@@ -454,7 +453,7 @@
     }
 
     function setRandomBtn(visible) {
-      document.getElementById('random-btn').style.display = visible ? 'block' : 'none';
+      document.getElementById('random-btn').style.visibility = visible ? 'visible' : 'hidden';
     }
 
     function fillRandom() {
