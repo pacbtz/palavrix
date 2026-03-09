@@ -326,7 +326,8 @@
   <div id="keyboard"></div>
 
 
-<script>
+<script type="module">
+    import nspell from 'https://esm.sh/nspell';
     const MAX_GUESSES = 6;
     const WORD_LENGTH = 5;
     const EPOCH = new Date('2024-01-01T00:00:00Z');
@@ -356,7 +357,7 @@
 
     let WORD = '';
     let wordList = [];
-    let validWords = [];  // broader dictionary-pt word list for guess validation
+    let spell = null;  // nspell instance loaded from dictionary-pt
     let currentRow = 0;
     let currentCol = 0;
     let currentGuess = [];
@@ -483,7 +484,7 @@
       }
 
       const guess = currentGuess.join('').toLowerCase();
-      if (!wordList.includes(guess) && !validWords.includes(guess)) {
+      if (!wordList.includes(guess) && !(spell && spell.correct(guess))) {
         shakeRow(currentRow);
         showToast('Palavra não encontrada', currentRow);
         return;
@@ -603,12 +604,23 @@
     }
 
     function loadAndStart() {
-      fetch(`palavras-${WORD_LENGTH}.json`)
+      const wordListPromise = fetch(`palavras-${WORD_LENGTH}.json`)
         .then(r => {
           if (!r.ok) throw new Error(`Lista de palavras de ${WORD_LENGTH} letras não disponível`);
           return r.json();
-        })
-        .then(data => {
+        });
+
+      const spellPromise = Promise.all([
+        fetch('pt.aff').then(r => r.text()),
+        fetch('pt.dic').then(r => r.text()),
+      ]).then(([aff, dic]) => {
+        spell = nspell({ aff, dic });
+      }).catch(() => {
+        // spell checker unavailable — fall back to wordList only
+      });
+
+      Promise.all([wordListPromise, spellPromise])
+        .then(([data]) => {
           wordList = data;
           initGame();
         })
