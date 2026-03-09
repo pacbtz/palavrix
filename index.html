@@ -5,9 +5,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Palavrix - Descobre a Palavra!</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Righteous&display=swap" rel="stylesheet">
   <style>
     * {
       box-sizing: border-box;
@@ -37,14 +34,13 @@
     }
 
     header h1 {
-      font-family: 'Righteous', sans-serif;
       font-size: 2rem;
-      font-weight: 400;
+      font-weight: 800;
       letter-spacing: 0.15rem;
       text-transform: uppercase;
     }
 
-    #random-btn {
+    .header-btn {
       visibility: hidden;
       background: transparent;
       color: #565758;
@@ -56,16 +52,23 @@
       line-height: 1;
       transition: color 0.15s;
       position: absolute;
-      right: 16px;
       top: 50%;
       transform: translateY(-50%);
     }
 
-    #random-btn:hover {
+    .header-btn:hover {
       color: #fff;
     }
 
-    #random-btn::after {
+    #trophy-btn {
+      left: 16px;
+    }
+
+    #random-btn, #share-icon-btn {
+      right: 16px;
+    }
+
+    .header-btn::after {
       content: attr(data-tooltip);
       position: absolute;
       top: calc(100% + 6px);
@@ -83,7 +86,7 @@
       transition: opacity 0.15s;
     }
 
-    #random-btn:hover::after {
+    .header-btn:hover::after {
       opacity: 1;
     }
 
@@ -279,26 +282,6 @@
       background: #3a3a3c;
     }
 
-    #share-btn {
-      display: none;
-      margin: 8px auto 0;
-      background: #538d4e;
-      color: #fff;
-      font-size: 0.9rem;
-      font-weight: 700;
-      letter-spacing: 0.05rem;
-      text-transform: uppercase;
-      border: none;
-      border-radius: 6px;
-      padding: 10px 24px;
-      cursor: pointer;
-      transition: background 0.15s;
-    }
-
-    #share-btn:hover {
-      background: #6aaf63;
-    }
-
     /* Floating toast anchored above a board row */
     #toast {
       position: absolute;
@@ -327,8 +310,10 @@
 <body>
 
   <header>
+    <button id="trophy-btn" class="header-btn" data-tooltip="ganhou!">🏆</button>
     <h1>Palavrix<span style="color:#b59f3b">5</span></h1>
-    <button id="random-btn" data-tooltip="palavra aleatória">🎲</button>
+    <button id="random-btn" class="header-btn" data-tooltip="palavra aleatória">🎲</button>
+    <button id="share-icon-btn" class="header-btn" data-tooltip="partilhar">📤</button>
   </header>
 
   <div id="board-container">
@@ -337,7 +322,6 @@
       <div id="board"></div>
     </div>
   </div>
-  <button id="share-btn">Partilhar resultado</button>
 
   <div id="keyboard"></div>
 
@@ -457,6 +441,12 @@
       document.getElementById('random-btn').style.visibility = visible ? 'visible' : 'hidden';
     }
 
+    function showEndButtons(won) {
+      document.getElementById('random-btn').style.visibility = 'hidden';
+      document.getElementById('share-icon-btn').style.visibility = 'visible';
+      if (won) document.getElementById('trophy-btn').style.visibility = 'visible';
+    }
+
     function fillRandom() {
       if (currentRow !== 0 || currentCol !== 0 || gameOver) return;
       const word = wordList[Math.floor(Math.random() * wordList.length)];
@@ -558,13 +548,10 @@
         if (won) {
           gameOver = true;
           bounceRow(row);
-          const msgs = ['Genial!', 'Magnífico!', 'Impressionante!', 'Esplêndido!', 'Ótimo!', 'Ufa!'];
-          showToast(msgs[Math.min(row, msgs.length - 1)], row);
-          document.getElementById('share-btn').style.display = 'block';
+          showEndButtons(true);
         } else if (currentRow >= MAX_GUESSES) {
           gameOver = true;
-          showToast(`A palavra era ${WORD}`, MAX_GUESSES - 1);
-          document.getElementById('share-btn').style.display = 'block';
+          showEndButtons(false);
         }
       }, totalDelay + flipDuration);
     }
@@ -607,7 +594,8 @@
       currentGuess = [];
       gameOver = false;
       guessResults = [];
-      document.getElementById('share-btn').style.display = 'none';
+      document.getElementById('trophy-btn').style.visibility = 'hidden';
+      document.getElementById('share-icon-btn').style.visibility = 'hidden';
       setRandomBtn(true);
       buildBoard();
       buildKeyboard();
@@ -650,7 +638,7 @@
         .catch(() => showToast('Erro ao copiar', 0));
     }
 
-    document.getElementById('share-btn').addEventListener('click', shareResult);
+    document.getElementById('share-icon-btn').addEventListener('click', shareResult);
     document.getElementById('random-btn').addEventListener('click', fillRandom);
     document.addEventListener('keydown', e => handleKey(e.key));
 
