@@ -26,8 +26,11 @@
       width: 100%;
       max-width: 500px;
       border-bottom: 1px solid #3a3a3c;
-      padding: 12px 0 8px;
-      text-align: center;
+      padding: 12px 16px 8px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     header h1 {
@@ -37,43 +40,47 @@
       text-transform: uppercase;
     }
 
-    #length-selector {
-      display: flex;
-      justify-content: center;
-      gap: 5px;
-      margin-top: 8px;
-    }
-
-    .len-btn {
-      background: #3a3a3c;
-      color: #818384;
+    #random-btn {
+      visibility: hidden;
+      background: transparent;
+      color: #565758;
+      font-size: 1.4rem;
       border: none;
       border-radius: 4px;
-      font-size: 0.75rem;
-      font-weight: 700;
-      width: 28px;
-      height: 24px;
       cursor: pointer;
-      transition: background 0.15s, color 0.15s;
+      padding: 4px;
+      line-height: 1;
+      transition: color 0.15s;
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
     }
 
-    .len-btn:hover {
-      background: #565758;
+    #random-btn:hover {
       color: #fff;
     }
 
-    .len-btn.active {
-      background: #538d4e;
+    #random-btn::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: #3a3a3c;
       color: #fff;
-    }
-
-    #message {
-      height: 30px;
-      margin: 10px 0;
-      font-size: 1rem;
+      font-size: 0.72rem;
       font-weight: 600;
-      color: #fff;
-      text-align: center;
+      white-space: nowrap;
+      padding: 4px 8px;
+      border-radius: 4px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.15s;
+    }
+
+    #random-btn:hover::after {
+      opacity: 1;
     }
 
     #board-container {
@@ -82,6 +89,10 @@
       align-items: center;
       flex-grow: 1;
       padding: 10px 0;
+    }
+
+    #board-wrapper {
+      position: relative;
     }
 
     #board {
@@ -264,55 +275,25 @@
       background: #3a3a3c;
     }
 
-    #board-wrapper {
-      display: flex;
-      align-items: flex-start;
-      gap: 8px;
-    }
-
-    #board-side {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    #random-btn {
-      visibility: hidden;
-      background: transparent;
-      color: #565758;
-      font-size: 1.2rem;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      padding: 0;
-      line-height: 1;
-      transition: color 0.15s;
-      position: relative;
-    }
-
-    #random-btn:hover {
-      color: #fff;
-    }
-
-    #random-btn::after {
-      content: attr(data-tooltip);
+    /* Floating toast anchored above a board row */
+    #toast {
       position: absolute;
-      left: calc(100% + 8px);
-      top: 50%;
-      transform: translateY(-50%);
-      background: #3a3a3c;
-      color: #fff;
-      font-size: 0.72rem;
-      font-weight: 600;
+      left: 50%;
+      transform: translateX(-50%) translateY(-100%);
+      background: #fff;
+      color: #121213;
+      font-size: 0.85rem;
+      font-weight: 700;
+      padding: 7px 16px;
+      border-radius: 6px;
       white-space: nowrap;
-      padding: 4px 8px;
-      border-radius: 4px;
-      opacity: 0;
       pointer-events: none;
+      opacity: 0;
       transition: opacity 0.15s;
+      z-index: 10;
     }
 
-    #random-btn:hover::after {
+    #toast.visible {
       opacity: 1;
     }
 
@@ -323,17 +304,13 @@
 
   <header>
     <h1>Palavrix</h1>
-    <div id="length-selector"></div>
+    <button id="random-btn" data-tooltip="palavra aleatória">🎲</button>
   </header>
-
-  <div id="message"></div>
 
   <div id="board-container">
     <div id="board-wrapper">
+      <div id="toast"></div>
       <div id="board"></div>
-      <div id="board-side">
-        <button id="random-btn" data-tooltip="palavra aleatória">🎲</button>
-      </div>
     </div>
   </div>
 
@@ -342,18 +319,25 @@
 
 <script>
     const MAX_GUESSES = 6;
+    const WORD_LENGTH = 5;
     const EPOCH = new Date('2024-01-01T00:00:00Z');
 
-    function parseHash() {
-      const parts = location.hash.replace('#', '').split('/');
-      const length = parseInt(parts[0], 10);
-      return {
-        length: (length >= 5 && length <= 11) ? length : 5,
-        date: (parts[1] && /^\d{8}$/.test(parts[1])) ? parts[1] : null
-      };
+    function getDateParam() {
+      const hash = location.hash.replace('#', '');
+      const dateMatch = hash.match(/(\d{8})/);
+      if (dateMatch) {
+        const raw = dateMatch[1];
+        return `${raw.slice(0, 4)}-${raw.slice(4, 6)}-${raw.slice(6, 8)}`;
+      }
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     }
 
-    let WORD_LENGTH = parseHash().length;
+    function dateToWordIndex(dateStr) {
+      const selected = new Date(dateStr + 'T00:00:00Z');
+      const dayOffset = Math.floor((selected - EPOCH) / 86400000);
+      return ((dayOffset % wordList.length) + wordList.length) % wordList.length;
+    }
 
     const KEYBOARD_ROWS = [
       ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
@@ -369,29 +353,24 @@
     let gameOver = false;
     let tiles = [];
     let keyMap = {};
+    let tileSize = 57;
+    let toastTimer = null;
 
-    function getDateParam() {
-      const raw = parseHash().date;
-      if (raw) return `${raw.slice(0, 4)}-${raw.slice(4, 6)}-${raw.slice(6, 8)}`;
-      const d = new Date();
-      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-    }
-
-    function dateToWordIndex(dateStr) {
-      const selected = new Date(dateStr + 'T00:00:00Z');
-      const dayOffset = Math.floor((selected - EPOCH) / 86400000);
-      return ((dayOffset % wordList.length) + wordList.length) % wordList.length;
+    function showToast(msg, aboveRow) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      // Position the toast so its bottom is 8px above the target row
+      const rowHeight = tileSize + 5;
+      toast.style.top = (aboveRow * rowHeight - 8) + 'px';
+      toast.classList.add('visible');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('visible'), 1800);
     }
 
     function buildBoard() {
-      const tileSize = Math.max(36, Math.floor(310 / WORD_LENGTH) - 5);
+      tileSize = Math.max(36, Math.floor(310 / WORD_LENGTH) - 5);
       const boardWidth = (tileSize + 5) * WORD_LENGTH - 5;
       const fontSize = Math.max(1, tileSize * 0.55) + 'px';
-
-      const btn = document.getElementById('random-btn');
-      btn.style.width = tileSize + 'px';
-      btn.style.height = tileSize + 'px';
-      btn.style.fontSize = (tileSize * 0.45) + 'px';
 
       const board = document.getElementById('board');
       board.style.width = boardWidth + 'px';
@@ -434,10 +413,6 @@
         });
         keyboard.appendChild(rowEl);
       });
-    }
-
-    function setMessage(msg) {
-      document.getElementById('message').textContent = msg;
     }
 
     function handleKey(key) {
@@ -486,16 +461,14 @@
     function submitGuess() {
       if (currentCol < WORD_LENGTH) {
         shakeRow(currentRow);
-        setMessage('Palavra incompleta');
-        setTimeout(() => setMessage(''), 1500);
+        showToast('Palavra incompleta', currentRow);
         return;
       }
 
       const guess = currentGuess.join('').toLowerCase();
       if (!wordList.includes(guess)) {
         shakeRow(currentRow);
-        setMessage('Palavra não encontrada');
-        setTimeout(() => setMessage(''), 1500);
+        showToast('Palavra não encontrada', currentRow);
         return;
       }
 
@@ -559,10 +532,10 @@
           gameOver = true;
           bounceRow(row);
           const msgs = ['Genial!', 'Magnífico!', 'Impressionante!', 'Esplêndido!', 'Ótimo!', 'Ufa!'];
-          setMessage(msgs[Math.min(row, msgs.length - 1)]);
+          showToast(msgs[Math.min(row, msgs.length - 1)], row);
         } else if (currentRow >= MAX_GUESSES) {
           gameOver = true;
-          setMessage(`A palavra era ${WORD}`);
+          showToast(`A palavra era ${WORD}`, MAX_GUESSES - 1);
         }
       }, totalDelay + flipDuration);
     }
@@ -604,34 +577,12 @@
       currentCol = 0;
       currentGuess = [];
       gameOver = false;
-      setMessage('');
       setRandomBtn(true);
       buildBoard();
       buildKeyboard();
     }
 
-    function buildLengthSelector() {
-      const container = document.getElementById('length-selector');
-      container.innerHTML = '';
-      for (let n = 5; n <= 11; n++) {
-        const btn = document.createElement('button');
-        btn.classList.add('len-btn');
-        if (n === WORD_LENGTH) btn.classList.add('active');
-        btn.textContent = n;
-        btn.addEventListener('click', () => {
-          if (n === WORD_LENGTH) return;
-          WORD_LENGTH = n;
-          const date = parseHash().date;
-          location.hash = date ? `${n}/${date}` : `${n}`;
-          loadAndStart();
-        });
-        container.appendChild(btn);
-      }
-    }
-
     function loadAndStart() {
-      WORD_LENGTH = parseHash().length;
-      buildLengthSelector();
       fetch(`palavras-${WORD_LENGTH}.json`)
         .then(r => {
           if (!r.ok) throw new Error(`Lista de palavras de ${WORD_LENGTH} letras não disponível`);
@@ -642,14 +593,13 @@
           initGame();
         })
         .catch(err => {
-          setMessage(err.message);
+          showToast(err.message, 0);
         });
     }
 
     document.getElementById('random-btn').addEventListener('click', fillRandom);
     document.addEventListener('keydown', e => handleKey(e.key));
 
-    buildLengthSelector();
     loadAndStart();
   </script>
 </body>
