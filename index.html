@@ -264,24 +264,57 @@
       background: #3a3a3c;
     }
 
+    #board-wrapper {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    #board-side {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
     #random-btn {
       display: none;
-      margin: 0 auto 10px;
-      padding: 6px 14px;
       background: transparent;
-      color: #818384;
-      font-size: 0.78rem;
-      font-weight: 600;
+      color: #565758;
+      font-size: 1.2rem;
       border: 1px solid #3a3a3c;
       border-radius: 4px;
       cursor: pointer;
-      letter-spacing: 0.03rem;
+      padding: 0;
+      line-height: 1;
       transition: color 0.15s, border-color 0.15s;
+      position: relative;
     }
 
     #random-btn:hover {
       color: #fff;
       border-color: #818384;
+    }
+
+    #random-btn::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      left: calc(100% + 8px);
+      top: 50%;
+      transform: translateY(-50%);
+      background: #3a3a3c;
+      color: #fff;
+      font-size: 0.72rem;
+      font-weight: 600;
+      white-space: nowrap;
+      padding: 4px 8px;
+      border-radius: 4px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.15s;
+    }
+
+    #random-btn:hover::after {
+      opacity: 1;
     }
 
   </style>
@@ -297,10 +330,13 @@
   <div id="message"></div>
 
   <div id="board-container">
-    <div id="board"></div>
+    <div id="board-wrapper">
+      <div id="board"></div>
+      <div id="board-side">
+        <button id="random-btn" data-tooltip="palavra aleatória">🎲</button>
+      </div>
+    </div>
   </div>
-
-  <button id="random-btn">🎲 palavra aleatória</button>
 
   <div id="keyboard"></div>
 
@@ -352,6 +388,11 @@
       const tileSize = Math.max(36, Math.floor(310 / WORD_LENGTH) - 5);
       const boardWidth = (tileSize + 5) * WORD_LENGTH - 5;
       const fontSize = Math.max(1, tileSize * 0.55) + 'px';
+
+      const btn = document.getElementById('random-btn');
+      btn.style.width = tileSize + 'px';
+      btn.style.height = tileSize + 'px';
+      btn.style.fontSize = (tileSize * 0.45) + 'px';
 
       const board = document.getElementById('board');
       board.style.width = boardWidth + 'px';
@@ -421,6 +462,7 @@
       const word = wordList[Math.floor(Math.random() * wordList.length)];
       word.toUpperCase().split('').forEach(letter => addLetter(letter));
       setRandomBtn(false);
+      submitGuess();
     }
 
     function addLetter(letter) {
