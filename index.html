@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Palavrix - Descobre a Palavra!</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: #121213;
+      color: #fff;
+      font-family: 'Clear Sans', 'Helvetica Neue', Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    header {
+      width: 100%;
+      max-width: 500px;
+      border-bottom: 1px solid #3a3a3c;
+      padding: 12px 0;
+      text-align: center;
+    }
+
+    header h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: 0.1rem;
+      text-transform: uppercase;
+    }
+
+    #message {
+      height: 30px;
+      margin: 10px 0;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #fff;
+      text-align: center;
+    }
+
+    #board-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-grow: 1;
+      padding: 10px 0;
+    }
+
+    #board {
+      display: grid;
+      grid-template-rows: repeat(6, 1fr);
+      gap: 5px;
+      width: 310px;
+      height: 370px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 5px;
+    }
+
+    .tile {
+      width: 100%;
+      border: 2px solid #3a3a3c;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #fff;
+      user-select: none;
+      transition: border-color 0.1s;
+    }
+
+    .tile[data-letter] {
+      border-color: #565758;
+      animation: pop 0.1s ease-in-out;
+    }
+
+    @keyframes pop {
+      0% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.12);
+      }
+
+      100% {
+        transform: scale(1);
+      }
+    }
+
+    .tile.flip {
+      animation: flip 0.5s ease forwards;
+    }
+
+    @keyframes flip {
+      0% {
+        transform: rotateX(0deg);
+      }
+
+      50% {
+        transform: rotateX(-90deg);
+        background: transparent;
+        border-color: #565758;
+      }
+
+      100% {
+        transform: rotateX(0deg);
+      }
+    }
+
+    .tile.correct {
+      background: #538d4e;
+      border-color: #538d4e;
+    }
+
+    .tile.present {
+      background: #b59f3b;
+      border-color: #b59f3b;
+    }
+
+    .tile.absent {
+      background: #3a3a3c;
+      border-color: #3a3a3c;
+    }
+
+    .tile.shake {
+      animation: shake 0.5s ease;
+    }
+
+    @keyframes shake {
+
+      0%,
+      100% {
+        transform: translateX(0);
+      }
+
+      20% {
+        transform: translateX(-4px);
+      }
+
+      40% {
+        transform: translateX(4px);
+      }
+
+      60% {
+        transform: translateX(-4px);
+      }
+
+      80% {
+        transform: translateX(4px);
+      }
+    }
+
+    .tile.bounce {
+      animation: bounce 0.1s ease forwards;
+    }
+
+    @keyframes bounce {
+      0% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-20px);
+      }
+
+      100% {
+        transform: translateY(0);
+      }
+    }
+
+    #keyboard {
+      margin-bottom: 20px;
+      width: 100%;
+      max-width: 500px;
+      padding: 0 8px;
+    }
+
+    .keyboard-row {
+      display: flex;
+      justify-content: center;
+      gap: 4px;
+      margin-bottom: 6px;
+    }
+
+    .key {
+      height: 58px;
+      border-radius: 4px;
+      border: none;
+      background: #818384;
+      color: #fff;
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      cursor: pointer;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      min-width: 0;
+      padding: 0;
+      transition: background 0.2s;
+    }
+
+    .key.wide {
+      flex: 1.5;
+      font-size: 0.75rem;
+    }
+
+    .key:active {
+      filter: brightness(0.8);
+    }
+
+    .key.correct {
+      background: #538d4e;
+    }
+
+    .key.present {
+      background: #b59f3b;
+    }
+
+    .key.absent {
+      background: #3a3a3c;
+    }
+
+    #play-again {
+      display: none;
+      margin: 10px auto;
+      padding: 12px 28px;
+      background: #538d4e;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.05rem;
+    }
+
+    #play-again:hover {
+      background: #6aaf63;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <h1>Palavra</h1>
+  </header>
+
+  <div id="message"></div>
+
+  <div id="board-container">
+    <div id="board"></div>
+  </div>
+
+  <div id="keyboard"></div>
+
+  <button id="play-again" onclick="initGame()">Play Again</button>
+
+  <script>
+    const WORD = 'PEDRO';
+    const MAX_GUESSES = 6;
+    const WORD_LENGTH = 5;
+
+    const KEYBOARD_ROWS = [
+      ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
+      ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'],
+      ['Enter', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', '⌫']
+    ];
+
+    let currentRow = 0;
+    let currentCol = 0;
+    let currentGuess = [];
+    let gameOver = false;
+    let tiles = [];
+    let keyMap = {};
+
+    function buildBoard() {
+      const board = document.getElementById('board');
+      board.innerHTML = '';
+      tiles = [];
+      for (let r = 0; r < MAX_GUESSES; r++) {
+        const row = document.createElement('div');
+        row.classList.add('row');
+        const rowTiles = [];
+        for (let c = 0; c < WORD_LENGTH; c++) {
+          const tile = document.createElement('div');
+          tile.classList.add('tile');
+          row.appendChild(tile);
+          rowTiles.push(tile);
+        }
+        board.appendChild(row);
+        tiles.push(rowTiles);
+      }
+    }
+
+    function buildKeyboard() {
+      const keyboard = document.getElementById('keyboard');
+      keyboard.innerHTML = '';
+      keyMap = {};
+      KEYBOARD_ROWS.forEach(row => {
+        const rowEl = document.createElement('div');
+        rowEl.classList.add('keyboard-row');
+        row.forEach(key => {
+          const btn = document.createElement('button');
+          btn.classList.add('key');
+          btn.textContent = key;
+          if (key === 'Enter' || key === '⌫') btn.classList.add('wide');
+          btn.addEventListener('click', () => handleKey(key));
+          rowEl.appendChild(btn);
+          keyMap[key] = btn;
+        });
+        keyboard.appendChild(rowEl);
+      });
+    }
+
+    function setMessage(msg) {
+      document.getElementById('message').textContent = msg;
+    }
+
+    function handleKey(key) {
+      if (gameOver) return;
+
+      if (key === '⌫' || key === 'Backspace') {
+        deleteLetter();
+      } else if (key === 'Enter') {
+        submitGuess();
+      } else if (/^[A-Za-z]$/.test(key)) {
+        addLetter(key.toUpperCase());
+      }
+    }
+
+    function addLetter(letter) {
+      if (currentCol >= WORD_LENGTH) return;
+      const tile = tiles[currentRow][currentCol];
+      tile.textContent = letter;
+      tile.setAttribute('data-letter', letter);
+      currentGuess.push(letter);
+      currentCol++;
+    }
+
+    function deleteLetter() {
+      if (currentCol <= 0) return;
+      currentCol--;
+      currentGuess.pop();
+      const tile = tiles[currentRow][currentCol];
+      tile.textContent = '';
+      tile.removeAttribute('data-letter');
+    }
+
+    function submitGuess() {
+      if (currentCol < WORD_LENGTH) {
+        shakeRow(currentRow);
+        setMessage('Not enough letters');
+        setTimeout(() => setMessage(''), 1500);
+        return;
+      }
+
+      const guess = currentGuess.join('');
+      const result = evaluateGuess(guess);
+      revealRow(currentRow, result, guess);
+    }
+
+    function evaluateGuess(guess) {
+      const result = Array(WORD_LENGTH).fill('absent');
+      const wordArr = WORD.split('');
+      const guessArr = guess.split('');
+      const used = Array(WORD_LENGTH).fill(false);
+
+      // First pass: correct positions
+      for (let i = 0; i < WORD_LENGTH; i++) {
+        if (guessArr[i] === wordArr[i]) {
+          result[i] = 'correct';
+          used[i] = true;
+          guessArr[i] = null;
+        }
+      }
+
+      // Second pass: present letters
+      for (let i = 0; i < WORD_LENGTH; i++) {
+        if (guessArr[i] === null) continue;
+        for (let j = 0; j < WORD_LENGTH; j++) {
+          if (!used[j] && guessArr[i] === wordArr[j]) {
+            result[i] = 'present';
+            used[j] = true;
+            break;
+          }
+        }
+      }
+
+      return result;
+    }
+
+    function revealRow(row, result, guess) {
+      const rowTiles = tiles[row];
+      let delay = 0;
+      const flipDuration = 500;
+
+      rowTiles.forEach((tile, i) => {
+        setTimeout(() => {
+          tile.classList.add('flip');
+          setTimeout(() => {
+            tile.classList.add(result[i]);
+            updateKey(guess[i], result[i]);
+          }, flipDuration / 2);
+        }, delay);
+        delay += 300;
+      });
+
+      const totalDelay = delay;
+
+      setTimeout(() => {
+        const won = result.every(r => r === 'correct');
+        currentRow++;
+        currentCol = 0;
+        currentGuess = [];
+
+        if (won) {
+          gameOver = true;
+          bounceRow(row);
+          const msgs = ['Genius!', 'Magnificent!', 'Impressive!', 'Splendid!', 'Great!', 'Phew!'];
+          setMessage(msgs[Math.min(row, msgs.length - 1)]);
+          document.getElementById('play-again').style.display = 'block';
+        } else if (currentRow >= MAX_GUESSES) {
+          gameOver = true;
+          setMessage(`The word was ${WORD}`);
+          document.getElementById('play-again').style.display = 'block';
+        }
+      }, totalDelay + flipDuration);
+    }
+
+    function updateKey(letter, state) {
+      const btn = keyMap[letter];
+      if (!btn) return;
+      const priority = { correct: 3, present: 2, absent: 1 };
+      const current = btn.classList.contains('correct') ? 3
+        : btn.classList.contains('present') ? 2
+          : btn.classList.contains('absent') ? 1 : 0;
+      if (priority[state] > current) {
+        btn.classList.remove('correct', 'present', 'absent');
+        btn.classList.add(state);
+      }
+    }
+
+    function shakeRow(row) {
+      tiles[row].forEach(tile => {
+        tile.classList.add('shake');
+        tile.addEventListener('animationend', () => tile.classList.remove('shake'), { once: true });
+      });
+    }
+
+    function bounceRow(row) {
+      tiles[row].forEach((tile, i) => {
+        setTimeout(() => {
+          tile.classList.add('bounce');
+          tile.addEventListener('animationend', () => tile.classList.remove('bounce'), { once: true });
+        }, i * 100);
+      });
+    }
+
+    function initGame() {
+      currentRow = 0;
+      currentCol = 0;
+      currentGuess = [];
+      gameOver = false;
+      setMessage('');
+      document.getElementById('play-again').style.display = 'none';
+      buildBoard();
+      buildKeyboard();
+    }
+
+    document.addEventListener('keydown', e => handleKey(e.key));
+
+    initGame();
+  </script>
+</body>
+
+</html>
