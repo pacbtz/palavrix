@@ -356,6 +356,7 @@
 
     let WORD = '';
     let wordList = [];
+    let validWords = [];  // broader dictionary-pt word list for guess validation
     let currentRow = 0;
     let currentCol = 0;
     let currentGuess = [];
@@ -482,7 +483,7 @@
       }
 
       const guess = currentGuess.join('').toLowerCase();
-      if (!wordList.includes(guess)) {
+      if (!wordList.includes(guess) && !validWords.includes(guess)) {
         shakeRow(currentRow);
         showToast('Palavra não encontrada', currentRow);
         return;
