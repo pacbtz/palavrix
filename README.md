@@ -4,7 +4,7 @@ Jogo da palavra - Wordle game that always uses the word **PEDRO**.
 
 ## Play Online
 
-**https://pedrobtz.github.io/palavra/**
+**https://pacbtz.github.io/palavrix/**
 
 ## How to Play
 
