@@ -5,6 +5,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Palavrix - Descobre a Palavra!</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Righteous&display=swap" rel="stylesheet">
   <style>
     * {
       box-sizing: border-box;
@@ -34,9 +37,10 @@
     }
 
     header h1 {
+      font-family: 'Righteous', sans-serif;
       font-size: 2rem;
-      font-weight: 700;
-      letter-spacing: 0.1rem;
+      font-weight: 400;
+      letter-spacing: 0.15rem;
       text-transform: uppercase;
     }
 
@@ -303,7 +307,7 @@
 <body>
 
   <header>
-    <h1>Palavrix</h1>
+    <h1>Palavrix<span style="color:#b59f3b">5</span></h1>
     <button id="random-btn" data-tooltip="palavra aleatória">🎲</button>
   </header>
 
