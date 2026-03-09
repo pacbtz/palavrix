@@ -26,7 +26,7 @@
       width: 100%;
       max-width: 500px;
       border-bottom: 1px solid #3a3a3c;
-      padding: 12px 0;
+      padding: 12px 0 8px;
       text-align: center;
     }
 
@@ -35,6 +35,36 @@
       font-weight: 700;
       letter-spacing: 0.1rem;
       text-transform: uppercase;
+    }
+
+    #length-selector {
+      display: flex;
+      justify-content: center;
+      gap: 5px;
+      margin-top: 8px;
+    }
+
+    .len-btn {
+      background: #3a3a3c;
+      color: #818384;
+      border: none;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      width: 28px;
+      height: 24px;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .len-btn:hover {
+      background: #565758;
+      color: #fff;
+    }
+
+    .len-btn.active {
+      background: #538d4e;
+      color: #fff;
     }
 
     #message {
@@ -234,6 +264,26 @@
       background: #3a3a3c;
     }
 
+    #random-btn {
+      display: none;
+      margin: 0 auto 10px;
+      padding: 6px 14px;
+      background: transparent;
+      color: #818384;
+      font-size: 0.78rem;
+      font-weight: 600;
+      border: 1px solid #3a3a3c;
+      border-radius: 4px;
+      cursor: pointer;
+      letter-spacing: 0.03rem;
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    #random-btn:hover {
+      color: #fff;
+      border-color: #818384;
+    }
+
   </style>
 </head>
 
@@ -241,6 +291,7 @@
 
   <header>
     <h1>Palavrix</h1>
+    <div id="length-selector"></div>
   </header>
 
   <div id="message"></div>
@@ -249,6 +300,8 @@
     <div id="board"></div>
   </div>
 
+  <button id="random-btn">🎲 palavra aleatória</button>
+
   <div id="keyboard"></div>
 
 
@@ -256,12 +309,16 @@
     const MAX_GUESSES = 6;
     const EPOCH = new Date('2024-01-01T00:00:00Z');
 
-    function getLengthParam() {
-      const raw = parseInt(new URLSearchParams(location.search).get('length'), 10);
-      return (raw >= 5 && raw <= 11) ? raw : 5;
+    function parseHash() {
+      const parts = location.hash.replace('#', '').split('/');
+      const length = parseInt(parts[0], 10);
+      return {
+        length: (length >= 5 && length <= 11) ? length : 5,
+        date: (parts[1] && /^\d{8}$/.test(parts[1])) ? parts[1] : null
+      };
     }
 
-    let WORD_LENGTH = getLengthParam();
+    let WORD_LENGTH = parseHash().length;
 
     const KEYBOARD_ROWS = [
       ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
@@ -279,10 +336,8 @@
     let keyMap = {};
 
     function getDateParam() {
-      const raw = new URLSearchParams(location.search).get('date');
-      if (raw && /^\d{8}$/.test(raw)) {
-        return `${raw.slice(0, 4)}-${raw.slice(4, 6)}-${raw.slice(6, 8)}`;
-      }
+      const raw = parseHash().date;
+      if (raw) return `${raw.slice(0, 4)}-${raw.slice(4, 6)}-${raw.slice(6, 8)}`;
       const d = new Date();
       return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     }
@@ -357,6 +412,17 @@
       }
     }
 
+    function setRandomBtn(visible) {
+      document.getElementById('random-btn').style.display = visible ? 'block' : 'none';
+    }
+
+    function fillRandom() {
+      if (currentRow !== 0 || currentCol !== 0 || gameOver) return;
+      const word = wordList[Math.floor(Math.random() * wordList.length)];
+      word.toUpperCase().split('').forEach(letter => addLetter(letter));
+      setRandomBtn(false);
+    }
+
     function addLetter(letter) {
       if (currentCol >= WORD_LENGTH) return;
       const tile = tiles[currentRow][currentCol];
@@ -364,6 +430,7 @@
       tile.setAttribute('data-letter', letter);
       currentGuess.push(letter);
       currentCol++;
+      if (currentRow === 0 && currentCol === 1) setRandomBtn(false);
     }
 
     function deleteLetter() {
@@ -497,24 +564,52 @@
       currentGuess = [];
       gameOver = false;
       setMessage('');
-buildBoard();
+      setRandomBtn(true);
+      buildBoard();
       buildKeyboard();
     }
 
+    function buildLengthSelector() {
+      const container = document.getElementById('length-selector');
+      container.innerHTML = '';
+      for (let n = 5; n <= 11; n++) {
+        const btn = document.createElement('button');
+        btn.classList.add('len-btn');
+        if (n === WORD_LENGTH) btn.classList.add('active');
+        btn.textContent = n;
+        btn.addEventListener('click', () => {
+          if (n === WORD_LENGTH) return;
+          WORD_LENGTH = n;
+          const date = parseHash().date;
+          location.hash = date ? `${n}/${date}` : `${n}`;
+          loadAndStart();
+        });
+        container.appendChild(btn);
+      }
+    }
+
+    function loadAndStart() {
+      WORD_LENGTH = parseHash().length;
+      buildLengthSelector();
+      fetch(`palavras-${WORD_LENGTH}.json`)
+        .then(r => {
+          if (!r.ok) throw new Error(`Lista de palavras de ${WORD_LENGTH} letras não disponível`);
+          return r.json();
+        })
+        .then(data => {
+          wordList = data;
+          initGame();
+        })
+        .catch(err => {
+          setMessage(err.message);
+        });
+    }
+
+    document.getElementById('random-btn').addEventListener('click', fillRandom);
     document.addEventListener('keydown', e => handleKey(e.key));
 
-    fetch(`palavras-${WORD_LENGTH}.json`)
-      .then(r => {
-        if (!r.ok) throw new Error(`No word list for length ${WORD_LENGTH}`);
-        return r.json();
-      })
-      .then(data => {
-        wordList = data;
-        initGame();
-      })
-      .catch(err => {
-        document.getElementById('message').textContent = err.message;
-      });
+    buildLengthSelector();
+    loadAndStart();
   </script>
 </body>
 
