@@ -256,35 +256,6 @@
       background: #6aaf63;
     }
 
-    #date-selector {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      margin-top: 8px;
-    }
-
-    #date-selector label {
-      font-size: 0.8rem;
-      color: #818384;
-      text-transform: uppercase;
-      letter-spacing: 0.05rem;
-    }
-
-    #date-input {
-      background: #1a1a1b;
-      border: 1px solid #3a3a3c;
-      border-radius: 4px;
-      color: #fff;
-      font-size: 0.85rem;
-      padding: 4px 8px;
-      cursor: pointer;
-    }
-
-    #date-input::-webkit-calendar-picker-indicator {
-      filter: invert(1);
-      cursor: pointer;
-    }
   </style>
 </head>
 
@@ -292,10 +263,6 @@
 
   <header>
     <h1>Palavrix</h1>
-    <div id="date-selector">
-      <label for="date-input">Data</label>
-      <input type="date" id="date-input" />
-    </div>
   </header>
 
   <div id="message"></div>
@@ -328,12 +295,13 @@
     let tiles = [];
     let keyMap = {};
 
-    function todayString() {
+    function getDateParam() {
+      const raw = new URLSearchParams(location.search).get('date');
+      if (raw && /^\d{8}$/.test(raw)) {
+        return `${raw.slice(0, 4)}-${raw.slice(4, 6)}-${raw.slice(6, 8)}`;
+      }
       const d = new Date();
-      const y = d.getFullYear();
-      const m = String(d.getMonth() + 1).padStart(2, '0');
-      const day = String(d.getDate()).padStart(2, '0');
-      return `${y}-${m}-${day}`;
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     }
 
     function dateToWordIndex(dateStr) {
@@ -531,8 +499,7 @@
     }
 
     function initGame() {
-      const dateInput = document.getElementById('date-input');
-      const idx = dateToWordIndex(dateInput.value);
+      const idx = dateToWordIndex(getDateParam());
       WORD = wordList[idx].toUpperCase();
 
       currentRow = 0;
@@ -546,9 +513,6 @@
     }
 
     document.addEventListener('keydown', e => handleKey(e.key));
-
-    document.getElementById('date-input').value = todayString();
-    document.getElementById('date-input').addEventListener('change', () => initGame());
 
     fetch('palavras-5.json')
       .then(r => r.json())
