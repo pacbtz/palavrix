@@ -279,6 +279,26 @@
       background: #3a3a3c;
     }
 
+    #share-btn {
+      display: none;
+      margin: 8px auto 0;
+      background: #538d4e;
+      color: #fff;
+      font-size: 0.9rem;
+      font-weight: 700;
+      letter-spacing: 0.05rem;
+      text-transform: uppercase;
+      border: none;
+      border-radius: 6px;
+      padding: 10px 24px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    #share-btn:hover {
+      background: #6aaf63;
+    }
+
     /* Floating toast anchored above a board row */
     #toast {
       position: absolute;
@@ -317,6 +337,7 @@
       <div id="board"></div>
     </div>
   </div>
+  <button id="share-btn">Partilhar resultado</button>
 
   <div id="keyboard"></div>
 
@@ -359,6 +380,7 @@
     let keyMap = {};
     let tileSize = 57;
     let toastTimer = null;
+    let guessResults = [];
 
     function showToast(msg, aboveRow) {
       const toast = document.getElementById('toast');
@@ -527,6 +549,7 @@
       const totalDelay = delay;
 
       setTimeout(() => {
+        guessResults.push(result);
         const won = result.every(r => r === 'correct');
         currentRow++;
         currentCol = 0;
@@ -537,9 +560,11 @@
           bounceRow(row);
           const msgs = ['Genial!', 'Magnífico!', 'Impressionante!', 'Esplêndido!', 'Ótimo!', 'Ufa!'];
           showToast(msgs[Math.min(row, msgs.length - 1)], row);
+          document.getElementById('share-btn').style.display = 'block';
         } else if (currentRow >= MAX_GUESSES) {
           gameOver = true;
           showToast(`A palavra era ${WORD}`, MAX_GUESSES - 1);
+          document.getElementById('share-btn').style.display = 'block';
         }
       }, totalDelay + flipDuration);
     }
@@ -581,6 +606,8 @@
       currentCol = 0;
       currentGuess = [];
       gameOver = false;
+      guessResults = [];
+      document.getElementById('share-btn').style.display = 'none';
       setRandomBtn(true);
       buildBoard();
       buildKeyboard();
@@ -601,6 +628,29 @@
         });
     }
 
+    function shareResult() {
+      const EMOJI = { correct: '🟩', present: '🟨', absent: '⬛' };
+      const idx = dateToWordIndex(getDateParam());
+      const won = guessResults.at(-1).every(r => r === 'correct');
+      const score = won ? guessResults.length : 'X';
+      const grid = guessResults.map(row => row.map(s => EMOJI[s]).join('')).join('\n');
+      const url = window.location.href;
+      const text = `Palavrix #${idx + 1} ${score}/${MAX_GUESSES}\n\n${grid}\n\n${url}`;
+
+      if (navigator.share) {
+        navigator.share({ text }).catch(() => copyToClipboard(text));
+      } else {
+        copyToClipboard(text);
+      }
+    }
+
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text)
+        .then(() => showToast('Copiado!', 0))
+        .catch(() => showToast('Erro ao copiar', 0));
+    }
+
+    document.getElementById('share-btn').addEventListener('click', shareResult);
     document.getElementById('random-btn').addEventListener('click', fillRandom);
     document.addEventListener('keydown', e => handleKey(e.key));
 
