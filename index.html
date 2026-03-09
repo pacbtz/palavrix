@@ -58,13 +58,11 @@
       display: grid;
       grid-template-rows: repeat(6, 1fr);
       gap: 5px;
-      width: 310px;
       height: 370px;
     }
 
     .row {
       display: grid;
-      grid-template-columns: repeat(5, 1fr);
       gap: 5px;
     }
 
@@ -74,7 +72,6 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 2rem;
       font-weight: 700;
       text-transform: uppercase;
       color: #fff;
@@ -237,25 +234,6 @@
       background: #3a3a3c;
     }
 
-    #play-again {
-      display: none;
-      margin: 10px auto;
-      padding: 12px 28px;
-      background: #538d4e;
-      color: #fff;
-      font-size: 1rem;
-      font-weight: 700;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      text-transform: uppercase;
-      letter-spacing: 0.05rem;
-    }
-
-    #play-again:hover {
-      background: #6aaf63;
-    }
-
   </style>
 </head>
 
@@ -273,12 +251,17 @@
 
   <div id="keyboard"></div>
 
-  <button id="play-again" onclick="initGame()">Play Again</button>
 
-  <script>
+<script>
     const MAX_GUESSES = 6;
-    const WORD_LENGTH = 5;
     const EPOCH = new Date('2024-01-01T00:00:00Z');
+
+    function getLengthParam() {
+      const raw = parseInt(new URLSearchParams(location.search).get('length'), 10);
+      return (raw >= 5 && raw <= 11) ? raw : 5;
+    }
+
+    let WORD_LENGTH = getLengthParam();
 
     const KEYBOARD_ROWS = [
       ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
@@ -311,16 +294,25 @@
     }
 
     function buildBoard() {
+      const tileSize = Math.max(36, Math.floor(310 / WORD_LENGTH) - 5);
+      const boardWidth = (tileSize + 5) * WORD_LENGTH - 5;
+      const fontSize = Math.max(1, tileSize * 0.55) + 'px';
+
       const board = document.getElementById('board');
+      board.style.width = boardWidth + 'px';
       board.innerHTML = '';
       tiles = [];
+
       for (let r = 0; r < MAX_GUESSES; r++) {
         const row = document.createElement('div');
         row.classList.add('row');
+        row.style.gridTemplateColumns = `repeat(${WORD_LENGTH}, ${tileSize}px)`;
         const rowTiles = [];
         for (let c = 0; c < WORD_LENGTH; c++) {
           const tile = document.createElement('div');
           tile.classList.add('tile');
+          tile.style.fontSize = fontSize;
+          tile.style.height = tileSize + 'px';
           row.appendChild(tile);
           rowTiles.push(tile);
         }
@@ -460,11 +452,9 @@
           bounceRow(row);
           const msgs = ['Genial!', 'Magnífico!', 'Impressionante!', 'Esplêndido!', 'Ótimo!', 'Ufa!'];
           setMessage(msgs[Math.min(row, msgs.length - 1)]);
-          document.getElementById('play-again').style.display = 'block';
         } else if (currentRow >= MAX_GUESSES) {
           gameOver = true;
           setMessage(`A palavra era ${WORD}`);
-          document.getElementById('play-again').style.display = 'block';
         }
       }, totalDelay + flipDuration);
     }
@@ -507,18 +497,23 @@
       currentGuess = [];
       gameOver = false;
       setMessage('');
-      document.getElementById('play-again').style.display = 'none';
-      buildBoard();
+buildBoard();
       buildKeyboard();
     }
 
     document.addEventListener('keydown', e => handleKey(e.key));
 
-    fetch('palavras-5.json')
-      .then(r => r.json())
+    fetch(`palavras-${WORD_LENGTH}.json`)
+      .then(r => {
+        if (!r.ok) throw new Error(`No word list for length ${WORD_LENGTH}`);
+        return r.json();
+      })
       .then(data => {
         wordList = data;
         initGame();
+      })
+      .catch(err => {
+        document.getElementById('message').textContent = err.message;
       });
   </script>
 </body>
