@@ -255,6 +255,36 @@
     #play-again:hover {
       background: #6aaf63;
     }
+
+    #date-selector {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    #date-selector label {
+      font-size: 0.8rem;
+      color: #818384;
+      text-transform: uppercase;
+      letter-spacing: 0.05rem;
+    }
+
+    #date-input {
+      background: #1a1a1b;
+      border: 1px solid #3a3a3c;
+      border-radius: 4px;
+      color: #fff;
+      font-size: 0.85rem;
+      padding: 4px 8px;
+      cursor: pointer;
+    }
+
+    #date-input::-webkit-calendar-picker-indicator {
+      filter: invert(1);
+      cursor: pointer;
+    }
   </style>
 </head>
 
@@ -262,6 +292,10 @@
 
   <header>
     <h1>Palavrix</h1>
+    <div id="date-selector">
+      <label for="date-input">Data</label>
+      <input type="date" id="date-input" />
+    </div>
   </header>
 
   <div id="message"></div>
@@ -275,9 +309,9 @@
   <button id="play-again" onclick="initGame()">Play Again</button>
 
   <script>
-    const WORD = 'PEDRO';
     const MAX_GUESSES = 6;
     const WORD_LENGTH = 5;
+    const EPOCH = new Date('2024-01-01T00:00:00Z');
 
     const KEYBOARD_ROWS = [
       ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
@@ -285,12 +319,28 @@
       ['Enter', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', '⌫']
     ];
 
+    let WORD = '';
+    let wordList = [];
     let currentRow = 0;
     let currentCol = 0;
     let currentGuess = [];
     let gameOver = false;
     let tiles = [];
     let keyMap = {};
+
+    function todayString() {
+      const d = new Date();
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+
+    function dateToWordIndex(dateStr) {
+      const selected = new Date(dateStr + 'T00:00:00Z');
+      const dayOffset = Math.floor((selected - EPOCH) / 86400000);
+      return ((dayOffset % wordList.length) + wordList.length) % wordList.length;
+    }
 
     function buildBoard() {
       const board = document.getElementById('board');
@@ -342,7 +392,7 @@
         deleteLetter();
       } else if (key === 'Enter') {
         submitGuess();
-      } else if (/^[A-Za-z]$/.test(key)) {
+      } else if (/^[A-Za-záéíóúâêôãõàüç]$/i.test(key)) {
         addLetter(key.toUpperCase());
       }
     }
@@ -368,14 +418,21 @@
     function submitGuess() {
       if (currentCol < WORD_LENGTH) {
         shakeRow(currentRow);
-        setMessage('Not enough letters');
+        setMessage('Palavra incompleta');
         setTimeout(() => setMessage(''), 1500);
         return;
       }
 
-      const guess = currentGuess.join('');
-      const result = evaluateGuess(guess);
-      revealRow(currentRow, result, guess);
+      const guess = currentGuess.join('').toLowerCase();
+      if (!wordList.includes(guess)) {
+        shakeRow(currentRow);
+        setMessage('Palavra não encontrada');
+        setTimeout(() => setMessage(''), 1500);
+        return;
+      }
+
+      const result = evaluateGuess(guess.toUpperCase());
+      revealRow(currentRow, result, guess.toUpperCase());
     }
 
     function evaluateGuess(guess) {
@@ -384,7 +441,6 @@
       const guessArr = guess.split('');
       const used = Array(WORD_LENGTH).fill(false);
 
-      // First pass: correct positions
       for (let i = 0; i < WORD_LENGTH; i++) {
         if (guessArr[i] === wordArr[i]) {
           result[i] = 'correct';
@@ -393,7 +449,6 @@
         }
       }
 
-      // Second pass: present letters
       for (let i = 0; i < WORD_LENGTH; i++) {
         if (guessArr[i] === null) continue;
         for (let j = 0; j < WORD_LENGTH; j++) {
@@ -435,12 +490,12 @@
         if (won) {
           gameOver = true;
           bounceRow(row);
-          const msgs = ['Genius!', 'Magnificent!', 'Impressive!', 'Splendid!', 'Great!', 'Phew!'];
+          const msgs = ['Genial!', 'Magnífico!', 'Impressionante!', 'Esplêndido!', 'Ótimo!', 'Ufa!'];
           setMessage(msgs[Math.min(row, msgs.length - 1)]);
           document.getElementById('play-again').style.display = 'block';
         } else if (currentRow >= MAX_GUESSES) {
           gameOver = true;
-          setMessage(`The word was ${WORD}`);
+          setMessage(`A palavra era ${WORD}`);
           document.getElementById('play-again').style.display = 'block';
         }
       }, totalDelay + flipDuration);
@@ -476,6 +531,10 @@
     }
 
     function initGame() {
+      const dateInput = document.getElementById('date-input');
+      const idx = dateToWordIndex(dateInput.value);
+      WORD = wordList[idx].toUpperCase();
+
       currentRow = 0;
       currentCol = 0;
       currentGuess = [];
@@ -488,7 +547,15 @@
 
     document.addEventListener('keydown', e => handleKey(e.key));
 
-    initGame();
+    document.getElementById('date-input').value = todayString();
+    document.getElementById('date-input').addEventListener('change', () => initGame());
+
+    fetch('palavras-5.json')
+      .then(r => r.json())
+      .then(data => {
+        wordList = data;
+        initGame();
+      });
   </script>
 </body>
 
