@@ -394,6 +394,7 @@
 
     let WORD = '';
     let wordList = [];
+    let validWords = [];
     let currentRow = 0;
     let currentCol = 0;
     let currentGuess = [];
@@ -520,7 +521,7 @@
       }
 
       const guess = currentGuess.join('').toLowerCase();
-      if (!wordList.includes(guess)) {
+      if (!validWords.includes(guess)) {
         shakeRow(currentRow);
         showToast('Palavra não encontrada', currentRow);
         return;
@@ -640,13 +641,16 @@
     }
 
     function loadAndStart() {
-      fetch(`data/palavras-${WORD_LENGTH}.json`)
-        .then(r => {
+      Promise.all([
+        fetch(`data/palavras-${WORD_LENGTH}.json`).then(r => {
           if (!r.ok) throw new Error(`Lista de palavras de ${WORD_LENGTH} letras não disponível`);
           return r.json();
-        })
-        .then(data => {
-          wordList = data;
+        }),
+        fetch(`data/palavras-${WORD_LENGTH}-expanded.json`).then(r => r.ok ? r.json() : [])
+      ])
+        .then(([words, expanded]) => {
+          wordList = words;
+          validWords = expanded.length ? expanded : words;
           initGame();
         })
         .catch(err => {
