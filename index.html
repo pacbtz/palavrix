@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Palavrix - Descobre a Palavra!</title>
   <style>
     * {
@@ -19,7 +19,9 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      min-height: 100vh;
+      height: 100vh;
+      height: 100dvh;
+      overflow: hidden;
     }
 
     header {
@@ -95,7 +97,9 @@
       justify-content: center;
       align-items: center;
       flex-grow: 1;
+      min-height: 0;
       padding: 10px 0;
+      overflow: hidden;
     }
 
     #board-wrapper {
@@ -228,10 +232,11 @@
     }
 
     #keyboard {
-      margin-bottom: 20px;
+      margin-bottom: max(8px, env(safe-area-inset-bottom, 8px));
       width: 100%;
       max-width: 500px;
       padding: 0 8px;
+      flex-shrink: 0;
     }
 
     .keyboard-row {
@@ -280,6 +285,20 @@
 
     .key.absent {
       background: #3a3a3c;
+    }
+
+    @media (max-height: 680px) {
+      #keyboard {
+        margin-bottom: 4px;
+      }
+
+      .keyboard-row {
+        margin-bottom: 4px;
+      }
+
+      .key {
+        height: 44px;
+      }
     }
 
     /* Floating toast anchored above a board row */
