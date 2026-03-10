@@ -42,6 +42,25 @@
       text-transform: uppercase;
     }
 
+    .len-opt {
+      color: #565758;
+      cursor: pointer;
+      transition: color 0.15s;
+    }
+
+    .len-opt:hover {
+      color: #b59f3b;
+    }
+
+    .len-opt.active {
+      color: #b59f3b;
+    }
+
+    .len-sep {
+      color: #3a3a3c;
+      margin: 0 1px;
+    }
+
     .header-btn {
       visibility: hidden;
       background: transparent;
@@ -330,7 +349,7 @@
 
   <header>
     <button id="trophy-btn" class="header-btn" data-tooltip="ganhou!">🏆</button>
-    <h1>Palavrix<span style="color:#b59f3b">5</span></h1>
+    <h1>Palavrix <span id="length-toggle"><span class="len-opt active" data-len="5">5</span><span class="len-sep">·</span><span class="len-opt" data-len="6">6</span></span></h1>
     <button id="random-btn" class="header-btn" data-tooltip="palavra aleatória">🎲</button>
     <button id="share-icon-btn" class="header-btn" data-tooltip="partilhar">📤</button>
   </header>
@@ -347,7 +366,7 @@
 
 <script>
     const MAX_GUESSES = 6;
-    const WORD_LENGTH = 5;
+    let WORD_LENGTH = 5;
     const EPOCH = new Date('2024-01-01T00:00:00Z');
 
     function getDateParam() {
@@ -621,7 +640,7 @@
     }
 
     function loadAndStart() {
-      fetch(`palavras-${WORD_LENGTH}.json`)
+      fetch(`data/palavras-${WORD_LENGTH}.json`)
         .then(r => {
           if (!r.ok) throw new Error(`Lista de palavras de ${WORD_LENGTH} letras não disponível`);
           return r.json();
@@ -660,6 +679,18 @@
     document.getElementById('share-icon-btn').addEventListener('click', shareResult);
     document.getElementById('random-btn').addEventListener('click', fillRandom);
     document.addEventListener('keydown', e => handleKey(e.key));
+
+    document.getElementById('length-toggle').addEventListener('click', e => {
+      const opt = e.target.closest('.len-opt');
+      if (!opt) return;
+      const len = parseInt(opt.dataset.len);
+      if (len === WORD_LENGTH) return;
+      WORD_LENGTH = len;
+      document.querySelectorAll('.len-opt').forEach(el =>
+        el.classList.toggle('active', parseInt(el.dataset.len) === WORD_LENGTH)
+      );
+      loadAndStart();
+    });
 
     loadAndStart();
   </script>
