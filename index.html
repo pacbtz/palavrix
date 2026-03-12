@@ -420,7 +420,7 @@
       const toast = document.getElementById('toast');
       toast.textContent = msg;
       // Position the toast so its bottom is 8px above the target row
-      const rowHeight = tileSize + Math.round(tileSize * 5 / 57);
+      const rowHeight = tileSize + 5;
       toast.style.top = (aboveRow * rowHeight - 8) + 'px';
       toast.classList.add('visible');
       clearTimeout(toastTimer);
@@ -428,12 +428,17 @@
     }
 
     function buildBoard() {
-      tileSize = Math.max(36, Math.floor(310 / WORD_LENGTH) - 5);
-      const gap = Math.round(tileSize * 5 / 57);
-      const boardWidth = (tileSize + gap) * WORD_LENGTH - gap;
+      const gap = 5;
+      const container = document.getElementById('board-container');
+      const availH = container.clientHeight - 20;
+      const availW = container.clientWidth - 20;
+      const tileFromH = Math.floor((availH - gap * (MAX_GUESSES - 1)) / MAX_GUESSES);
+      const tileFromW = Math.floor((availW - gap * (WORD_LENGTH - 1)) / WORD_LENGTH);
+      tileSize = Math.max(36, Math.min(tileFromH, tileFromW));
+      const boardWidth = tileSize * WORD_LENGTH + gap * (WORD_LENGTH - 1);
       const fontSize = Math.max(1, tileSize * 0.55) + 'px';
 
-      const boardHeight = (tileSize + gap) * MAX_GUESSES - gap;
+      const boardHeight = tileSize * MAX_GUESSES + gap * (MAX_GUESSES - 1);
 
       const board = document.getElementById('board');
       board.style.width = boardWidth + 'px';
