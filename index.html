@@ -410,6 +410,7 @@
     let currentCol = 0;
     let currentGuess = [];
     let gameOver = false;
+    let isRevealing = false;
     let tiles = [];
     let keyMap = {};
     let tileSize = 57;
@@ -487,7 +488,7 @@
     }
 
     function handleKey(key) {
-      if (gameOver) return;
+      if (gameOver || isRevealing) return;
 
       if (key === '⌫' || key === 'Backspace') {
         deleteLetter();
@@ -505,7 +506,7 @@
     }
 
     function fillRandom() {
-      if (gameOver) return;
+      if (gameOver || isRevealing) return;
       while (currentCol > 0) deleteLetter();
       const word = wordList[Math.floor(Math.random() * wordList.length)];
       word.toUpperCase().split('').forEach(letter => addLetter(letter));
@@ -580,6 +581,7 @@
       const rowTiles = tiles[row];
       let delay = 0;
       const flipDuration = 500;
+      isRevealing = true;
 
       rowTiles.forEach((tile, i) => {
         setTimeout(() => {
@@ -595,6 +597,7 @@
       const totalDelay = delay;
 
       setTimeout(() => {
+        isRevealing = false;
         guessResults.push(result);
         const won = result.every(r => r === 'correct');
         currentRow++;
@@ -650,6 +653,7 @@
       currentCol = 0;
       currentGuess = [];
       gameOver = false;
+      isRevealing = false;
       guessResults = [];
       document.getElementById('trophy-btn').style.visibility = 'hidden';
       document.getElementById('share-icon-btn').style.visibility = 'hidden';
