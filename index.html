@@ -433,8 +433,11 @@
       const boardWidth = (tileSize + gap) * WORD_LENGTH - gap;
       const fontSize = Math.max(1, tileSize * 0.55) + 'px';
 
+      const boardHeight = (tileSize + gap) * MAX_GUESSES - gap;
+
       const board = document.getElementById('board');
       board.style.width = boardWidth + 'px';
+      board.style.height = boardHeight + 'px';
       board.style.gap = gap + 'px';
       board.innerHTML = '';
       tiles = [];
