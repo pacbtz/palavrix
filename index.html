@@ -420,7 +420,7 @@
       const toast = document.getElementById('toast');
       toast.textContent = msg;
       // Position the toast so its bottom is 8px above the target row
-      const rowHeight = tileSize + 5;
+      const rowHeight = tileSize + Math.round(tileSize * 5 / 57);
       toast.style.top = (aboveRow * rowHeight - 8) + 'px';
       toast.classList.add('visible');
       clearTimeout(toastTimer);
@@ -429,17 +429,20 @@
 
     function buildBoard() {
       tileSize = Math.max(36, Math.floor(310 / WORD_LENGTH) - 5);
-      const boardWidth = (tileSize + 5) * WORD_LENGTH - 5;
+      const gap = Math.round(tileSize * 5 / 57);
+      const boardWidth = (tileSize + gap) * WORD_LENGTH - gap;
       const fontSize = Math.max(1, tileSize * 0.55) + 'px';
 
       const board = document.getElementById('board');
       board.style.width = boardWidth + 'px';
+      board.style.gap = gap + 'px';
       board.innerHTML = '';
       tiles = [];
 
       for (let r = 0; r < MAX_GUESSES; r++) {
         const row = document.createElement('div');
         row.classList.add('row');
+        row.style.gap = gap + 'px';
         row.style.gridTemplateColumns = `repeat(${WORD_LENGTH}, ${tileSize}px)`;
         const rowTiles = [];
         for (let c = 0; c < WORD_LENGTH; c++) {
