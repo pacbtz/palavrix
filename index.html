@@ -3,8 +3,18 @@
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>Palavrix - Descobre a Palavra!</title>
+
+  <!-- Google Analytics 4 -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-J3FP3PSVV1"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-J3FP3PSVV1');
+  </script>
+
   <style>
     * {
       box-sizing: border-box;
@@ -276,6 +286,7 @@
       text-transform: uppercase;
       cursor: pointer;
       user-select: none;
+      touch-action: manipulation;
       display: flex;
       align-items: center;
       justify-content: center;
