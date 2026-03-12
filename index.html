@@ -430,9 +430,11 @@
 
     function buildBoard() {
       const gap = 5;
-      const container = document.getElementById('board-container');
-      const availH = container.clientHeight - 20;
-      const availW = container.clientWidth - 20;
+      const availH = window.innerHeight
+        - document.querySelector('header').offsetHeight
+        - document.getElementById('keyboard').offsetHeight
+        - 20; // board-container padding
+      const availW = Math.min(window.innerWidth, 500) - 16;
       const tileFromH = Math.floor((availH - gap * (MAX_GUESSES - 1)) / MAX_GUESSES);
       const tileFromW = Math.floor((availW - gap * (WORD_LENGTH - 1)) / WORD_LENGTH);
       tileSize = Math.max(36, Math.min(tileFromH, tileFromW));
@@ -658,8 +660,8 @@
       document.getElementById('trophy-btn').style.visibility = 'hidden';
       document.getElementById('share-icon-btn').style.visibility = 'hidden';
       document.getElementById('random-btn').style.visibility = 'visible';
-      buildBoard();
       buildKeyboard();
+      buildBoard();
     }
 
     function loadAndStart() {
