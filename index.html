@@ -264,19 +264,19 @@
       margin-bottom: max(8px, env(safe-area-inset-bottom, 8px));
       width: 100%;
       max-width: 500px;
-      padding: 0 8px;
+      padding: 0 6px;
       flex-shrink: 0;
     }
 
     .keyboard-row {
       display: flex;
       justify-content: center;
-      gap: 4px;
-      margin-bottom: 6px;
+      gap: 5px;
+      margin-bottom: 8px;
     }
 
     .key {
-      height: 58px;
+      height: 76px;
       border-radius: 4px;
       border: none;
       background: #818384;
@@ -317,17 +317,17 @@
       background: #3a3a3c;
     }
 
-    @media (max-height: 680px) {
+    @media (max-height: 720px) {
       #keyboard {
         margin-bottom: 4px;
       }
 
       .keyboard-row {
-        margin-bottom: 4px;
+        margin-bottom: 5px;
       }
 
       .key {
-        height: 44px;
+        height: 54px;
       }
     }
 
@@ -430,9 +430,11 @@
 
     function buildBoard() {
       const gap = 5;
+      const keyboardEl = document.getElementById('keyboard');
       const availH = window.innerHeight
         - document.querySelector('header').offsetHeight
-        - document.getElementById('keyboard').offsetHeight
+        - keyboardEl.offsetHeight
+        - parseFloat(getComputedStyle(keyboardEl).marginBottom)
         - 20; // board-container padding
       const availW = Math.min(window.innerWidth, 500) - 16;
       const tileFromH = Math.floor((availH - gap * (MAX_GUESSES - 1)) / MAX_GUESSES);
