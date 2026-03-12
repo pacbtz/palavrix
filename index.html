@@ -657,7 +657,7 @@
       ])
         .then(([words, expanded]) => {
           wordList = words;
-          validWords = expanded.length ? expanded : words;
+          validWords = [...new Set([...words, ...expanded])];
           initGame();
         })
         .catch(err => {
