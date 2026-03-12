@@ -416,7 +416,7 @@
     let toastTimer = null;
     let guessResults = [];
 
-    function showToast(msg, aboveRow) {
+    function showToast(msg, aboveRow, duration = 1800) {
       const toast = document.getElementById('toast');
       toast.textContent = msg;
       // Position the toast so its bottom is 8px above the target row
@@ -424,7 +424,7 @@
       toast.style.top = (aboveRow * rowHeight - 8) + 'px';
       toast.classList.add('visible');
       clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => toast.classList.remove('visible'), 1800);
+      toastTimer = setTimeout(() => toast.classList.remove('visible'), duration);
     }
 
     function buildBoard() {
@@ -487,10 +487,6 @@
       }
     }
 
-    function setRandomBtn(visible) {
-      document.getElementById('random-btn').style.visibility = visible ? 'visible' : 'hidden';
-    }
-
     function showEndButtons(won) {
       document.getElementById('random-btn').style.visibility = 'hidden';
       document.getElementById('share-icon-btn').style.visibility = 'visible';
@@ -498,10 +494,10 @@
     }
 
     function fillRandom() {
-      if (currentRow !== 0 || currentCol !== 0 || gameOver) return;
+      if (gameOver) return;
+      while (currentCol > 0) deleteLetter();
       const word = wordList[Math.floor(Math.random() * wordList.length)];
       word.toUpperCase().split('').forEach(letter => addLetter(letter));
-      setRandomBtn(false);
       submitGuess();
     }
 
@@ -512,7 +508,6 @@
       tile.setAttribute('data-letter', letter);
       currentGuess.push(letter);
       currentCol++;
-      if (currentRow === 0 && currentCol === 1) setRandomBtn(false);
     }
 
     function deleteLetter() {
@@ -602,6 +597,7 @@
         } else if (currentRow >= MAX_GUESSES) {
           gameOver = true;
           showEndButtons(false);
+          showToast(WORD, Math.floor(MAX_GUESSES / 2), 4000);
         }
       }, totalDelay + flipDuration);
     }
@@ -646,7 +642,7 @@
       guessResults = [];
       document.getElementById('trophy-btn').style.visibility = 'hidden';
       document.getElementById('share-icon-btn').style.visibility = 'hidden';
-      setRandomBtn(true);
+      document.getElementById('random-btn').style.visibility = 'visible';
       buildBoard();
       buildKeyboard();
     }
