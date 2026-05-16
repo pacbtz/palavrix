@@ -611,6 +611,7 @@
         if (won) {
           gameOver = true;
           bounceRow(row);
+          showToast('Muitos Parabéns!', Math.floor(MAX_GUESSES / 2), 4000);
           showEndButtons(true);
         } else if (currentRow >= MAX_GUESSES) {
           gameOver = true;
